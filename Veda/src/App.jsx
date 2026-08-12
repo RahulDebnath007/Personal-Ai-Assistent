@@ -1,43 +1,84 @@
-import React,{useContext} from 'react'
-import './App.css'
+import React, { useContext } from "react";
+import "./App.css";
 import va from "./assets/Veda.png";
-import { FaMicrophone } from "react-icons/fa";
-import { datacontext } from './context/UserContext';
+import { FaMicrophone, FaStop } from "react-icons/fa";
+import { datacontext } from "./context/UserContext";
 import speakimg from "./assets/speak.gif";
 import aigif from "./assets/aiVoice.gif";
-function App() {
 
-  let {recognition,speaking,setSpeaking,prompt,response,setPrompt,setResponse}= useContext(datacontext)
-  
+function App() {
+  const {
+    listening,
+    response,
+    prompt,
+    startListening,
+    stopListening,
+  } = useContext(datacontext);
+
   return (
-    <div className='main'>
-      <img src={va} alt="" id="veda" />
-      <span>I'm Veda...Your Advance Virtual Assistant</span>
-      
-      {!speaking?
-      <button onClick={()=>{
-       setPrompt("listening...")
-       setSpeaking(true)
-        setResponse(false)
-       recognition.start()
-       
-       // speak("Hello, I am Veda, your advanced virtual assistant. How can I assist you today?")
-      }}>Click here <FaMicrophone /></button>
-    
-      :
-      <div className='response'>
-          {response?
-            <img src={aigif} alt="" id="aigif"/>
-        :
-       
-        <img src={speakimg} alt="" id="speak"/>
-       }
-        <p>{prompt}</p>
-        </div>
-        
+    <div className="main">
+
+      <img
+        src={va}
+        alt="Veda"
+        id="veda"
+      />
+
+      <span>
+        I'm Veda...Your Advance Virtual Assistant
+      </span>
+
+      {/* Response area */}
+      <div className="response">
+
+        {response ? (
+          <img
+            src={aigif}
+            alt="Veda responding"
+            id="aigif"
+          />
+        ) : listening ? (
+          <img
+            src={speakimg}
+            alt="Listening"
+            id="speak"
+          />
+        ) : null}
+
+        <p>
+          {prompt}
+        </p>
+
+      </div>
+
+      {/* Microphone ALWAYS remains visible */}
+      <button
+        className={`mic-button ${
+          listening ? "listening" : ""
+        }`}
+        onClick={
+          listening
+            ? stopListening
+            : startListening
         }
+      >
+
+        {listening ? (
+          <>
+            Stop
+            <FaStop />
+          </>
+        ) : (
+          <>
+            Click here
+            <FaMicrophone />
+          </>
+        )}
+
+      </button>
+
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

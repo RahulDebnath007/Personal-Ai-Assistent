@@ -1,55 +1,97 @@
-let apikey = "AIzaSyDWZVm_92jmxSSDIow4hLYweDGMRf_TGEc"
-
-
 import {
-    GoogleGenerativeAI,
-    HarmCategory,
-    HarmBlockThreshold,
-  } from "@google/generative-ai";
-  
-  
-  
-  const genAI = new GoogleGenerativeAI(apikey);
-  
-  const model = genAI.getGenerativeModel({
-    model: "gemini-3.5-flash",
+  GoogleGenerativeAI,
+} from "@google/generative-ai";
+
+// ============================================================
+// GEMINI API KEY
+// ============================================================
+console.log("🔥 NEW GEMINI.JS IS LOADED");
+const apiKey =
+  import.meta.env.VITE_GEMINI_API_KEY;
+
+if (!apiKey) {
+  throw new Error(
+    "VITE_GEMINI_API_KEY is missing from .env"
+  );
+}
+
+// ============================================================
+// GEMINI
+// ============================================================
+
+const genAI =
+  new GoogleGenerativeAI(apiKey);
+
+const model =
+  genAI.getGenerativeModel({
+    model: "gemini-3.1-flash-lite",
   });
-  
-  const generationConfig = {
-    temperature: 1,
-    topP: 0.95,
-    topK: 64,
-    maxOutputTokens: 2030,
-    responseModalities: [
-    ],
-    responseMimeType: "text/plain",
-  };
-  
-  async function run(prompt) {
-    const chatSession = model.startChat({
-      generationConfig,
-      history: [
-      ],
-    });
-  
-    const result = await chatSession.sendMessage(prompt);
-    // TODO: Following code needs to be updated for client-side apps.
-    const candidates = result.response.candidates;
-    for(let candidate_index = 0; candidate_index < candidates.length; candidate_index++) {
-      for(let part_index = 0; part_index < candidates[candidate_index].content.parts.length; part_index++) {
-        const part = candidates[candidate_index].content.parts[part_index];
-        if(part.inlineData) {
-          try {
-            const filename = `output_${candidate_index}_${part_index}.${mime.extension(part.inlineData.mimeType)}`;
-            fs.writeFileSync(filename, Buffer.from(part.inlineData.data, 'base64'));
-            console.log(`Output written to: ${filename}`);
-          } catch (err) {
-            console.error(err);
-          }
-        }
-      }
-    }
-    return result.response.text()
+
+// ============================================================
+// GENERATION CONFIG
+// ============================================================
+
+const generationConfig = {
+  temperature: 1,
+  topP: 0.95,
+  topK: 64,
+  maxOutputTokens: 2030,
+  responseMimeType: "text/plain",
+};
+
+// ============================================================
+// RUN GEMINI
+// ============================================================
+
+async function run(prompt) {
+
+  if (!prompt || !prompt.trim()) {
+    return "Please tell me what you need.";
   }
-  
- export default run;
+
+  try {
+
+    const chatSession =
+      model.startChat({
+        generationConfig,
+        history: [],
+      });
+
+    const result =
+      await chatSession.sendMessage(
+        prompt
+      );
+
+    const text =
+      result?.response?.text?.();
+
+    if (!text) {
+      return "I could not generate a response.";
+    }
+
+    return text;
+
+  } catch (error) {
+
+    console.error(
+      "Gemini API Error:",
+      error
+    );
+
+    if (
+      error?.message?.includes("429")
+    ) {
+      return "Gemini API quota has been exceeded. Please check your API quota.";
+    }
+
+    if (
+      error?.message?.includes("API_KEY_INVALID")
+    ) {
+      return "The Gemini API key is invalid. Please check your .env file.";
+    }
+
+    return "Sorry, I could not connect to Gemini.";
+  }
+}
+
+export default run;
